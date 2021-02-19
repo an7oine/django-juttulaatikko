@@ -1,0 +1,133 @@
+{% extends "juttulaatikko/juttulaatikko.html" %}
+
+{# Mukautetaan viestirivin ja syötelaatikon HTML-rakenne. #}
+{% block rivi %}
+  <div class="kupla">
+    <div class="tiedot">
+      <span class="kirjoittaja"></span>
+      <span class="aika"></span>
+    </div>
+    <div class="teksti"></div>
+  </div>
+{% endblock rivi %}
+
+{% block syote %}
+  <div class="syoterivi">
+    <div class="kupla">
+      <textarea
+        class="syote"
+        placeholder="Kirjoita vastaus"
+        rows="1"
+        disabled
+        autofocus
+        ></textarea>
+    </div>
+  </div>
+{% endblock syote %}
+
+{# Mukautetaan CSS-asettelu. #}
+{% block css %}
+  {{ block.super }}
+  <style>
+    .juttulaatikko {
+      width: 100%;
+      font-size: 150%;
+      -webkit-text-size-adjust: 100%;
+    }
+    .juttulaatikko .viestihistoria {
+      width: 100%;
+      display: table;
+      padding-bottom: 10em;
+    }
+    .juttulaatikko .rivi {
+      display: table-row;
+      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 1));
+    }
+    .juttulaatikko .rivi .kupla {
+      filter: unset;
+      padding: 0.5em 0.5em 1em 0.5em;
+      margin: 0 0.5em 0.5em 0.5em;
+      background-color: white;
+    }
+    .juttulaatikko .rivi.oma .kupla {
+      margin-left: 1em;
+      clip-path: polygon(
+        0 0.5em,
+        0 calc(100% - 0.5em),
+        calc(100% - 0.5em) calc(100% - 0.5em),
+        100% 100%,
+        100% 0,
+        0.5em 0
+      );
+      float: right;
+      text-align: right;
+      background-color: lightyellow;
+    }
+    .juttulaatikko .rivi.vieras .kupla {
+      margin-right: 1em;
+      clip-path: polygon(
+        0 0,
+        0 100%,
+        0.5em calc(100% - 0.5em),
+        100% calc(100% - 0.5em),
+        100% 0.5em,
+        calc(100% - 0.5em) 0
+      );
+      float: left;
+    }
+    .juttulaatikko .rivi .tiedot {
+      display: inline-block;
+      font-size: 75%;
+      font-style: oblique;
+    }
+    .juttulaatikko .rivi.oma .kirjoittaja {
+      display: none;
+    }
+
+    .juttulaatikko .syoterivi {
+      position: fixed;
+      bottom: -0.5em;
+      filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 1));
+      width: calc(100% - 1em);
+    }
+    .juttulaatikko .syoterivi .kupla {
+      filter: unset;
+      width: calc(100% - 1em);
+      padding: 0.5em 0.5em 1em 0.5em;
+      margin: 0 0 0.5em 0;
+      background-color: white;
+      margin-left: 1em;
+      clip-path: polygon(
+        0 0.5em,
+        0 calc(100% - 0.5em),
+        calc(100% - 0.5em) calc(100% - 0.5em),
+        100% 100%,
+        100% 0,
+        0.5em 0
+      );
+      float: right;
+      text-align: right;
+      background-color: lightyellow;
+    }
+    .juttulaatikko .syoterivi .syote {
+      width: 100%;
+      background-color: unset;
+      border: none;
+      resize: none;
+      outline: none;
+      font-family: inherit;
+      font-size: inherit;
+    }
+  </style>
+{% endblock css %}
+
+{# Päivitetään syötelaatikon kokoa (pystysuunnassa) dynaamisesti. #}
+{% block js %}
+  {{ block.super }}
+  <script
+    src="https://unpkg.com/autosize@4.0.2/dist/autosize.js"
+    ></script>
+  <script>
+    autosize(document.querySelector(".juttulaatikko .syote"));
+  </script>
+{% endblock js %}

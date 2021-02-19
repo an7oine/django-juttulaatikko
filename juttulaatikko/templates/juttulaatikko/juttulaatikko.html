@@ -1,0 +1,131 @@
+{% load i18n %}
+
+{% block html %}
+  <div class="juttulaatikko">
+    <div style="display: none;">
+      <div class="rivi">
+        {% block rivi %}
+          <span class="kirjoittaja"></span>
+          <span class="aika"></span>
+          <span class="teksti"></span>
+        {% endblock rivi %}
+      </div>
+    </div>
+
+    <form class="kattely">
+      {% block kattely %}
+        {% csrf_token %}
+      {% endblock kattely %}
+    </form>
+
+    {% block viestihistoria %}
+      <div class="viestihistoria"></div>
+    {% endblock viestihistoria %}
+
+    {% block syote %}
+      <textarea
+        class="syote"
+        placeholder="Kirjoita vastaus"
+        rows="1"
+        disabled
+        autofocus
+        ></textarea>
+    {% endblock syote %}
+  </div>
+{% endblock html %}
+
+{% block css %}
+{% endblock css %}
+
+{% block js %}
+  <script>
+    // HTML-elementit.
+    let kattely = document.querySelector(
+      ".juttulaatikko .kattely"
+    );
+    let rivi = document.querySelector(
+      ".juttulaatikko .rivi"
+    );
+    let viestihistoria = document.querySelector(
+      ".juttulaatikko .viestihistoria"
+    );
+    let syote = document.querySelector(
+      ".juttulaatikko .syote"
+    );
+
+    // Tilamuuttujat.
+    var websocket = null;
+    var polku = "{{ request.path }}";
+
+    function avaa_juttulaatikko_ws() {
+      websocket = new WebSocket(
+        "{{ request.websocket }}" + polku
+      );
+      websocket.onopen = function (e) {
+        // Lähetä kättely.
+        let data = JSON.stringify(
+          Object.fromEntries(
+            new FormData(kattely)
+          )
+        );
+        websocket.send(data);
+
+        // Kuunnellaan saapuvia sanomia.
+        websocket.onmessage = function (e) {
+          // Tulkitaan saapuva sanoma JSON-muodossa.
+          let data = JSON.parse(e.data);
+
+          {% comment %}
+          Mikäli ketju on uusi, päivitetään WS-polku, kun ensimmäinen
+          viesti saapuu. Tällöin voidaan jatkaa samaa keskustelua,
+          vaikka yhteys katkeaisi.
+          {% endcomment %}
+          {% if not request.kwargs.pk %}
+            if (polku == "{{ request.path }}" && data.juttu_id) {
+              polku = "{{ request.path }}" + data.juttu_id + "/";
+            }
+          {% endif %}
+
+          // Muodostetaan HTML-elementti viestin tietojen mukaan.
+          let viesti = document.querySelector(
+            ".viestihistoria .rivi[data-id='" + data.id + "']"
+          ) || rivi.cloneNode(true);
+          viesti.classList.add(data.oma? "oma" : "vieras");
+          viesti.querySelector(".aika").textContent = data.aika;
+          viesti.querySelector(".kirjoittaja").textContent = data.kirjoittaja;
+          viesti.querySelector(".teksti").textContent = data.teksti;
+
+          // Lisätään viestielementti historiatietoihin,
+          // jos se on uusi.
+          if (! viesti.hasAttribute("data-id")) {
+            viesti.setAttribute("data-id", data.id);
+            viestihistoria.innerHTML += viesti.outerHTML;
+          }
+        };
+
+        // Jos yhteys palvelimeen katkeaa,
+        // estetään viestien kirjoitus ja yritetään uudelleen.
+        websocket.onclose = function (e) {
+          syote.setAttribute("disabled", "");
+          avaa_juttulaatikko_ws();
+        };
+
+        // Kuunnellaan näppäimistösyötettä.
+        syote.onkeydown = function (e) {
+          if (e.keyCode == 13 && ! e.shiftKey) {
+            e.preventDefault();
+            websocket.send(syote.value);
+            syote.value = "";
+          }
+        };
+
+        // Sallitaan viestien lähetys.
+        syote.removeAttribute("disabled");
+        syote.focus();
+      };
+    }
+
+    // Avataan yhteys automaattisesti.
+    avaa_juttulaatikko_ws();
+  </script>
+{% endblock js %}

@@ -1,0 +1,43 @@
+<!-- Demo: juttulaatikon upotus IFRAME-kehyksessä sivun oikeaan alareunaan. -->
+
+<div id="palveluikkuna" class="pienennetty">
+  <div class="sisalto">
+    <iframe onload="this.contentWindow.focus();"></iframe>
+  </div>
+  <a
+    class="avaa"
+    href="#"
+    onclick="if (! document.getElementById('juttulaatikko').classList.toggle('pienennetty') && ! document.querySelector('#juttulaatikko .sisalto iframe').hasAttribute('src')) document.querySelector('#juttulaatikko .sisalto iframe').src = 'https://palvelin.fi/juttulaatikko/';"
+    >
+    Juttulaatikko
+  </a>
+</div>
+
+<style>
+  #juttulaatikko {
+    position: fixed;
+    max-width: calc(100% - 40px);
+    max-height: calc(100% - 40px);
+    right: 20px;
+    bottom: 20px;
+    z-index: 1000;
+    display: inline-table;
+  }
+  #juttulaatikko .sisalto {
+    display: block;
+    max-width: calc(100% - 20px);
+    max-height: calc(100% - 20px);
+    width: 400px;
+    height: 600px;
+    margin: 10px;
+    transition: all 0.2s ease-in-out;
+  }
+  #juttulaatikko.pienennetty .sisalto {
+    height: 0 !important;
+    margin-bottom: 22px;
+    margin-top: -22px;
+  }
+  #juttulaatikko .avaa {
+    display: block;
+  }
+</style>
