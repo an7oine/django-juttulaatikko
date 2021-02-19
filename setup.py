@@ -9,7 +9,7 @@ setup(
   url='https://github.com/an7oine/django-juttulaatikko.git',
   author='Antti Hautaniemi',
   author_email='antti.hautaniemi@me.com',
-  packages=['juttulaatikko'],
+  packages=find_packages(exclude=('demo', )),
   include_package_data=True,
   entry_points={
     'django.sovellus': ['juttulaatikko = juttulaatikko'],
