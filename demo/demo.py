@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from django.contrib.auth import get_user_model
 from django.urls import path
 from django.utils.decorators import method_decorator
 from django.views.decorators.clickjacking import (
@@ -7,12 +8,13 @@ from django.views.decorators.clickjacking import (
 )
 from django.views.decorators.csrf import csrf_exempt
 
-from juttulaatikko.nakyma import Juttulaatikko
+from juttulaatikko.nakyma import Juttunakyma
+from juttulaatikko.kasikirjoitus import KasikirjoitettuJuttulaatikko
 
 
 @method_decorator(xframe_options_exempt, name='get')
 @method_decorator(csrf_exempt, name='websocket')
-class Demolaatikko(Juttulaatikko):
+class Demolaatikko(KasikirjoitettuJuttulaatikko, Juttunakyma):
   template_name = 'juttu/demo.html'
 
   tervetulotoivotus = {
@@ -22,18 +24,36 @@ class Demolaatikko(Juttulaatikko):
     'teksti': 'Juttua ei löydy!'
   }
 
-  async def aloita_uusi_juttu(self, request):
-    await request.send(self.tervetulotoivotus)
-    return await super().aloita_uusi_juttu(request)
+  @property
+  def kasikirjoitettu_kirjoittaja_id(self):
+    return get_user_model().objects.first().pk
+
+  def get_queryset(self):
+    if self.request.user.is_superuser:
+      return self.model.objects.all()
+    else:
+      return super().get_queryset()
+    # def get_queryset
+
+  async def aloita_uusi_juttu(self):
+    await self.request.send(self.tervetulotoivotus)
+    return await super().aloita_uusi_juttu()
     # async def aloita_uusi_juttu
 
-  async def jatka_aiempaa_juttua(self, request):
+  async def jatka_aiempaa_juttua(self):
     try:
-      return await super().jatka_aiempaa_juttua(request)
-    except self.malli.DoesNotExist:
-      await request.send(self.virheviesti)
+      return await super().jatka_aiempaa_juttua()
+    except self.model.DoesNotExist:
+      await self.request.send(self.virheviesti)
       raise
     # async def jatka_aiempaa_juttua
+
+  async def kasikirjoitus(self, laheta):
+    while True:
+      kayttajalta, viesti = yield
+      if 'Terve' in viesti:
+        await laheta(', maailma!')
+    # async def kasikirjoitus
 
   # class Demolaatikko
 
