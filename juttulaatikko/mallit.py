@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
+from datetime import datetime
+
 from django.contrib.auth import get_user_model
-from django.contrib.contenttypes.fields import GenericForeignKey
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 
@@ -56,4 +58,47 @@ class Viesti(models.Model):
   teksti = models.TextField(
     _('teksti'),
   )
+
+  @classmethod
+  def celery_signaalista(cls, signaali):
+    return cls(
+      id=signaali.get('id'),
+      juttu_id=signaali.get('juttu_id'),
+      kirjoittaja_id=signaali.get('kirjoittaja_id'),
+      teksti=signaali.get('teksti'),
+      aika=datetime.fromtimestamp(signaali.get('aika')),
+    )
+    # def celery_signaalista
+
+  def celery_signaaliksi(self):
+    return {
+      'id': self.id,
+      'juttu_id': self.juttu_id,
+      'kirjoittaja_id': self.kirjoittaja_id,
+      'teksti': self.teksti,
+      'aika': self.aika.timestamp(),
+    }
+    # def celery_signaaliksi
+
+  @classmethod
+  def kayttajalta(cls, teksti, juttu_id, kayttaja_id):
+    return cls(
+      juttu_id=int(juttu_id),
+      kirjoittaja_id=kayttaja_id,
+      aika=timezone.now(),
+      teksti=teksti,
+    )
+    # def kayttajalta
+
+  def kayttajalle(self, kayttaja_id):
+    return {
+      'id': self.id,
+      'juttu_id': self.juttu_id,
+      'kirjoittaja_id': self.kirjoittaja_id,
+      'aika': self.aika.strftime('%-d.%-m.%Y klo %-H.%M'),
+      'teksti': self.teksti,
+      'oma': self.kirjoittaja_id == kayttaja_id,
+    }
+    # def kayttajalle
+
   # class Viesti
