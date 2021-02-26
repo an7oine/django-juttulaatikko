@@ -100,6 +100,9 @@
           if (! viesti.hasAttribute("data-id")) {
             viesti.setAttribute("data-id", data.id);
             viestihistoria.innerHTML += viesti.outerHTML;
+
+            // Rullataan viestihistoria automaattisesti loppuun.
+            window.scrollTo(0, viestihistoria.scrollHeight);
           }
         };
 
