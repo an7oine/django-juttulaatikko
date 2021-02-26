@@ -117,8 +117,10 @@
         syote.onkeydown = function (e) {
           if (e.keyCode == 13 && ! e.shiftKey) {
             e.preventDefault();
-            websocket.send(JSON.stringify({"teksti": syote.value}));
-            syote.value = "";
+            if (syote.value) {
+              websocket.send(JSON.stringify({"teksti": syote.value}));
+              syote.value = "";
+            }
           }
         };
 
