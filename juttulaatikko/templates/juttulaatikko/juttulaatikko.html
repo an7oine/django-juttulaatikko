@@ -106,11 +106,14 @@
           }
         };
 
-        // Jos yhteys palvelimeen katkeaa,
-        // estetään viestien kirjoitus ja yritetään uudelleen.
+        // Jos yhteys palvelimeen katkeaa, estetään viestien kirjoitus.
+        // Yritetään yhteyden avaamista uudelleen, jos katkeaminen
+        // johtui muusta syystä kuin sivun sulkemisesta.
         websocket.onclose = function (e) {
           syote.setAttribute("disabled", "");
-          avaa_juttulaatikko_ws();
+          if (e.code > 1001) {
+            setTimeout(avaa_juttulaatikko_ws, 200);
+          }
         };
 
         // Kuunnellaan näppäimistösyötettä.
