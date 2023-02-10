@@ -4,11 +4,12 @@ import asyncio
 
 from asgiref.sync import async_to_sync, sync_to_async
 
+from django.utils.decorators import method_decorator
 from django.utils.functional import cached_property
 from django.views import generic
 
-from pistoke.nakyma import WebsocketNakyma
-from pistoke.tyokalut import csrf_tarkistus, json_viestiliikenne
+from pistoke import WebsocketNakyma, WebsocketProtokolla
+from pistoke.tyokalut import CsrfKattely, JsonLiikenne
 
 from juttulaatikko.celery import celery_app
 from juttulaatikko import mallit
@@ -145,8 +146,12 @@ class Juttulaatikko(
       # while True
     # async def kirjoitus
 
-  @json_viestiliikenne
-  @csrf_tarkistus(csrf_avain='csrfmiddlewaretoken', virhe_avain='teksti')
+  @method_decorator(WebsocketProtokolla)
+  @method_decorator(JsonLiikenne)
+  @method_decorator(CsrfKattely(
+    csrf_avain='csrfmiddlewaretoken',
+    virhe_avain='teksti',
+  ))
   async def websocket(self, request, *args, **kwargs):
     # Luo tai nouda pyydetty juttu.
     if self._uusi:

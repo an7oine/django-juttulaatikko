@@ -5,18 +5,20 @@ from asgiref.sync import sync_to_async
 from django.core.exceptions import ImproperlyConfigured
 from django.http import Http404
 from django.utils.crypto import get_random_string
+from django.utils.decorators import method_decorator
 from django.utils.functional import cached_property
 from django.views import generic
 
 from juttulaatikko.juttulaatikko import Juttulaatikko
+from pistoke import WebsocketNakyma, WebsocketProtokolla
 
 
-class Juttunakyma(Juttulaatikko, generic.TemplateView):
+class Juttunakyma(Juttulaatikko, generic.DetailView, WebsocketNakyma):
   template_name = 'juttulaatikko.html'
 
   @cached_property
   def anonyymi(self):
-    return self.request.COOKIES.get('juttulaatikko_anonyymi')
+    return self.request.COOKIES.get('juttulaatikko_anonyymi', '')
 
   @property
   def juttelija(self):
@@ -53,6 +55,9 @@ class Juttunakyma(Juttulaatikko, generic.TemplateView):
 
   async def websocket(self, request, *args, **kwargs):
     # Poista käyttäjä keskustelusta yhteyden katkettua.
+    self.object = await sync_to_async(
+      self.get_object
+    )()
     try:
       await super().websocket(request, *args, **kwargs)
     finally:
